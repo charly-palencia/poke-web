@@ -29,6 +29,9 @@ function Home() {
   };
 
   if (isError) return <div>failed to load</div>;
+  const Content = !isLoading
+    ? results.map((pokemon, key) => <PokemonCard pokemon={pokemon} key={key} />)
+    : "loading...";
 
   return (
     <Container>
@@ -47,9 +50,7 @@ function Home() {
           </Container>
         </Header>
         <CardList flexWrap="wrap" justifyContent="flex-start">
-          {!isLoading
-            ? results.map((pokemon) => <PokemonCard pokemon={pokemon} />)
-            : "loading..."}
+          {Content}
         </CardList>
       </Container>
     </Container>
