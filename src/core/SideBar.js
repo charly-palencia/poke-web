@@ -1,10 +1,10 @@
-import styled from "styled-components"
-const red = "red";
+import styled from "styled-components";
+const red = "#FF3D67";
 
 const SideBar = styled.div`
-  background: ${red};
   height: 100vh;
-  width: 200px;
-`
+  width: 298px;
+  background: ${red};
+`;
 
 export default SideBar;

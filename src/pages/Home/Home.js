@@ -1,37 +1,59 @@
-import React from 'react';
-import Header from '../../core/Header';
-import SideBar from '../../core/SideBar';
-import {Container,PokemonImage} from './components';
-import useSWR from 'swr'
+import React, {useState, useMemo} from "react";
+import Fuse from "fuse.js";
 
-const fetcher = (...args) => fetch(...args).then(res => res.json())
-const fetchImage =  (url) => {
-  const regExpUrl = /https:\/\/pokeapi.co\/api\/v2\/pokemon\/(\d+)\//
-  const id = url.match(regExpUrl)[1];
-  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/dream-world/${id}.svg`
-}
+import {useFetchPokemons} from "../../api/pokemon";
+import PokemonCard from "./PokemonCard";
+import AccountInformation from "./AccountInformation";
+import {Header, Container, SideBar} from "../../core";
+import searchIcon from "../../assets/search-icon.svg";
+import {CardList} from "./components";
 
-function Home(){
-  const { data, error } = useSWR('https://pokeapi.co/api/v2/pokemon/', fetcher)
-  if (error) return <div>failed to load</div>
+function Home() {
+  const {pokemons, isLoading, isError} = useFetchPokemons();
+  const [filter, setFilter] = useState("");
+  const results = useMemo(() => {
+    if (filter.trim() === "") return pokemons;
 
-  return <Container>
-    <SideBar>test</SideBar>
-    <Container flexDirection="column">
-      <Header></Header>
-      <Container flexWrap="wrap">
-        {data ?
-          data.results.map(pokemon => (
-          <Container flexDirection="column">
-            <PokemonImage src={fetchImage(pokemon.url)} alt="" />
-      <div id="name">{pokemon.name}></div>
-          </Container>))
-          :
-            "loading..."
-        }
+    const options = {
+      keys: ["name", "url"],
+      threshold: 0.3,
+    };
+    const fuse = new Fuse(pokemons, options);
+
+    const result = fuse.search(filter);
+    return result.map(({item}) => item);
+  }, [filter, pokemons]);
+
+  const handleInputChange = ({target: {value}}) => {
+    setFilter(value);
+  };
+
+  if (isError) return <div>failed to load</div>;
+
+  return (
+    <Container>
+      <SideBar>
+        <AccountInformation />
+      </SideBar>
+      <Container flexDirection="column">
+        <Header>
+          <Container justifyContent="flex-end" alignItems="center">
+            <input
+              type=""
+              placeholder="Type pikachu..."
+              onChange={handleInputChange}
+            />
+            <img src={searchIcon} alt="" />
+          </Container>
+        </Header>
+        <CardList flexWrap="wrap" justifyContent="flex-start">
+          {!isLoading
+            ? results.map((pokemon) => <PokemonCard pokemon={pokemon} />)
+            : "loading..."}
+        </CardList>
       </Container>
     </Container>
-  </Container>
+  );
 }
 
 export default Home;
